@@ -1,12 +1,50 @@
 import { useForm } from "react-hook-form";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { MdEmail, MdLock } from "react-icons/md";
+import { useAuth } from "../../hooks/useAuth";
+import { useEffect } from "react";
+import Swal from "sweetalert2";
+import { saveToken } from "../../lib/token";
+import useAxios from "../../hooks/useAxios";
 
 const LoginPage = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
-  const onSubmit = (data) => {
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+  const app = useAxios();
+
+  useEffect(() => {
+    if (user && !loading) {
+      navigate("/");
+    }
+  }, [user, loading, navigate]);
+
+  const onSubmit = async (data) => {
     console.log(data);
+    const { email, password } = data;
+
+    const { data: response } = await app.post("user/login", {
+      email,
+      password,
+    });
+    if (response.message && response.success) {
+      Swal.fire("Success", response.message, "success");
+    }
+    if (response.error) {
+      return Swal.fire("Error", response.error, "error");
+    }
+    if (response.token) {
+      saveToken(response.token);
+      navigate("/");
+    }
+    if (response.error) {
+      return Swal.fire("Error", response.error, "error");
+    }
   };
 
   return (
@@ -17,10 +55,15 @@ const LoginPage = () => {
 
           <div className="tabs tabs-bordered mb-4 justify-center">
             <span className="tab tab-bordered tab-active">Login</span>
-            <Link to="/signup" className="tab tab-bordered">Sign up</Link>
+            <Link to="/signup" className="tab tab-bordered">
+              Sign up
+            </Link>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col gap-4"
+          >
             <label className="form-control">
               <span className="label-text">Email</span>
               <div className="join w-full">
@@ -33,7 +76,11 @@ const LoginPage = () => {
                   {...register("email", { required: "Email is required" })}
                 />
               </div>
-              {errors.email && <span className="text-error text-sm mt-1">{errors.email.message}</span>}
+              {errors.email && (
+                <span className="text-error text-sm mt-1">
+                  {errors.email.message}
+                </span>
+              )}
             </label>
 
             <label className="form-control">
@@ -45,10 +92,16 @@ const LoginPage = () => {
                 <input
                   type="password"
                   className="input input-bordered join-item flex-1"
-                  {...register("password", { required: "Password is required" })}
+                  {...register("password", {
+                    required: "Password is required",
+                  })}
                 />
               </div>
-              {errors.password && <span className="text-error text-sm mt-1">{errors.password.message}</span>}
+              {errors.password && (
+                <span className="text-error text-sm mt-1">
+                  {errors.password.message}
+                </span>
+              )}
             </label>
 
             <button className="btn btn-primary mt-2">Sign in</button>

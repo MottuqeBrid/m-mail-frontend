@@ -1,16 +1,27 @@
-import { Link, NavLink } from "react-router";
+import { NavLink } from "react-router";
 import Logo from "../Logo/Logo";
-
-const links = [
-  { to: "/", label: "Home" },
-  { to: "/mail", label: "Mail" },
-  { to: "/blog", label: "Blog" },
-  { to: "/login", label: "Login" },
-  { to: "/signup", label: "Sign up" },
-  { to: "/admin", label: "Admin" },
-];
+import { useAuth } from "../../hooks/useAuth";
 
 const Navbar = () => {
+  const { user, logout, loading } = useAuth();
+  console.log(user);
+  if (loading) return null;
+
+  const isAdmin = user?.role === "admin";
+
+  const links = [
+    { to: "/", label: "Home" },
+    { to: "/mail", label: "Mail" },
+    { to: "/blog", label: "Blog" },
+    ...(user
+      ? []
+      : [
+          { to: "/login", label: "Login" },
+          { to: "/signup", label: "Sign up" },
+        ]),
+    ...(isAdmin ? [{ to: "/admin", label: "Admin" }] : []),
+  ];
+
   return (
     <div className="navbar bg-base-100 shadow-sm">
       <div className="navbar-start">
@@ -33,7 +44,7 @@ const Navbar = () => {
           </div>
           <ul
             tabIndex={0}
-            className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
+            className="menu menu-sm dropdown-content mt-3 z-1 p-2 shadow bg-base-100 rounded-box w-52"
           >
             {links.map((link) => (
               <li key={link.to}>
@@ -50,10 +61,10 @@ const Navbar = () => {
             ))}
           </ul>
         </div>
-        <Link to="/" className="flex items-center gap-2">
-          <Logo />
+        <div className="flex items-center gap-2">
+          <Logo link="/" />
           <span className="text-xl font-bold">m-mail</span>
-        </Link>
+        </div>
       </div>
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal px-1">
@@ -72,7 +83,16 @@ const Navbar = () => {
           ))}
         </ul>
       </div>
-      <div className="navbar-end" />
+      <div className="navbar-end">
+        {user && (
+          <div className="flex items-center gap-3">
+            <span className="text-sm">{user?.name}</span>
+            <button className="btn btn-ghost btn-sm" onClick={logout}>
+              Logout
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

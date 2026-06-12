@@ -1,12 +1,41 @@
 import { useForm } from "react-hook-form";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { MdEmail, MdLock, MdPerson } from "react-icons/md";
+import useAxios from "./../../hooks/useAxios";
+import { saveToken } from "../../lib/token";
+import Swal from "sweetalert2";
+import { useAuth } from "../../hooks/useAuth";
+import { useEffect } from "react";
 
 const SignupPage = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+  const app = useAxios();
 
-  const onSubmit = (data) => {
-    
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (user && !loading) {
+      navigate("/");
+    }
+  }, [user, loading, navigate]);
+
+  const onSubmit = async (data) => {
+    console.log(data);
+    const { data: response } = await app.post("user/signup", data);
+    console.log(response);
+    if (response.message && response.success) {
+      Swal.fire("Success", response.message, "success");
+    }
+    if (response.error) {
+      return Swal.fire("Error", response.error, "error");
+    }
+    saveToken(response.token);
+    navigate("/");
   };
 
   return (
@@ -16,11 +45,16 @@ const SignupPage = () => {
           <h2 className="text-2xl font-bold text-center">Sign up</h2>
 
           <div className="tabs tabs-bordered mb-4 justify-center">
-            <Link to="/login" className="tab tab-bordered">Login</Link>
+            <Link to="/login" className="tab tab-bordered">
+              Login
+            </Link>
             <span className="tab tab-bordered tab-active">Sign up</span>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col gap-4"
+          >
             <label className="form-control">
               <span className="label-text">Name</span>
               <div className="join w-full">
@@ -33,7 +67,11 @@ const SignupPage = () => {
                   {...register("name", { required: "Name is required" })}
                 />
               </div>
-              {errors.name && <span className="text-error text-sm mt-1">{errors.name.message}</span>}
+              {errors.name && (
+                <span className="text-error text-sm mt-1">
+                  {errors.name.message}
+                </span>
+              )}
             </label>
 
             <label className="form-control">
@@ -48,7 +86,11 @@ const SignupPage = () => {
                   {...register("email", { required: "Email is required" })}
                 />
               </div>
-              {errors.email && <span className="text-error text-sm mt-1">{errors.email.message}</span>}
+              {errors.email && (
+                <span className="text-error text-sm mt-1">
+                  {errors.email.message}
+                </span>
+              )}
             </label>
 
             <label className="form-control">
@@ -60,10 +102,17 @@ const SignupPage = () => {
                 <input
                   type="password"
                   className="input input-bordered join-item flex-1"
-                  {...register("password", { required: "Password is required", minLength: { value: 6, message: "Min 6 characters" } })}
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: { value: 6, message: "Min 6 characters" },
+                  })}
                 />
               </div>
-              {errors.password && <span className="text-error text-sm mt-1">{errors.password.message}</span>}
+              {errors.password && (
+                <span className="text-error text-sm mt-1">
+                  {errors.password.message}
+                </span>
+              )}
             </label>
 
             <button className="btn btn-primary mt-2">Create account</button>
