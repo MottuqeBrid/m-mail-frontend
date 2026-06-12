@@ -6,7 +6,7 @@ import { DOMAIN, randStr } from "./utils";
 
 // Modal to create a new temporary email address.
 // The domain is fixed to DOMAIN; the user only enters the local prefix.
-// Sends POST /create-temp-mail with the full address.
+// Sends POST /mail/create-temp-mail with the full address.
 const CreateMailModal = ({ onClose, onCreated }) => {
   const app = useAxios();
   const [prefix, setPrefix] = useState(randStr);
@@ -21,7 +21,7 @@ const CreateMailModal = ({ onClose, onCreated }) => {
     }
     setCreating(true);
     try {
-      const { data } = await app.post("create-temp-mail", {
+      const { data } = await app.post("mail/create-temp-mail", {
         email: fullEmail,
       });
       if (data.success) {
